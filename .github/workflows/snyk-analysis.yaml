@@ -1,0 +1,41 @@
+name: snyk-analysis-ci
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]  
+jobs:
+  snyk-analysis:
+    runs-on: ubuntu-latest
+    env:
+      SNYK_ORG_ID: 96fee7b9-cdd2-4e01-9d05-a0437cdac911
+      SNYK_INTEGRATION_ID: 1e395e58-6e8e-4625-a2d8-218ff17bc154
+      PATH_TO_DEPENDENCY_FILE: package.json 
+      REPOSITORY_BRANCH_TO_IMPORT_INTO_SNYK: main
+      GITHUB_ISSUE_ASSIGNEE: awshole
+      SECURITY_ISSUES_LABELS: "security, snyk, node" 
+      LICENSE_ISSUES_LABELS: "license-compliance"
+    steps:
+      - name: Checkout working repository
+        uses: actions/checkout@v2
+      - name: Checkout private GitHub Actions repository
+        uses: actions/checkout@v2
+        with:
+          repository: awshole/snyk-node
+          ref: main
+          token: ${{ secrets.SNYK_GITHUB_INTEGRATION_TOKEN }}
+          path: private-actions/snyk-node
+      - name: Conduct Snyk analysis
+        uses: ./private-actions/snyk-node
+        with:
+          snyk_api_key: ${{ secrets.SNYK_TOKEN }}
+          snyk_org_id: ${{ env.SNYK_ORG_ID }}
+          snyk_integration_id: ${{ env.SNYK_INTEGRATION_ID }}
+          repository: ${{ github.repository }}
+          branch_name: ${{ env.REPOSITORY_BRANCH_TO_IMPORT_INTO_SNYK }}
+          path_to_dependency_file: ${{ env.PATH_TO_DEPENDENCY_FILE }}
+          snyk_github_integration_token: ${{ secrets.SNYK_GITHUB_INTEGRATION_TOKEN }}
+          github_issue_assignee: ${{ env.GITHUB_ISSUE_ASSIGNEE }}
+          integrate_with_snyk_platform: 'true'
+          create_github_issues: 'true'
+          security_issues_labels: ${{ env.SECURITY_ISSUES_LABELS }}
+          license_issues_labels: ${{ env.LICENSE_ISSUES_LABELS }}
